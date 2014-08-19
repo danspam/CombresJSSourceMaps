@@ -1,9 +1,9 @@
-CombresJSSourceMaps
+Combres JS SourceMaps
 ===================
 
-Combres Javascript Minifier for Generating Sourcemaps
+Combres Javascript Minifier for Generating Sourcemaps based on the existing AjaxMin minifier but also generates sourcemaps for the compressed files.
 
-Add add a new jsMinifier to your combres.xml:
+Add add a new javascript minifier to your combres.xml:
 
 ```XML
 <jsMinifiers>
