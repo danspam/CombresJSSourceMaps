@@ -11,6 +11,8 @@ namespace CombresJSSourceMaps
 {
     public class SourceMapMinifier : IResourceMinifier
     {
+        static readonly object SourceMapLock = new object();
+
         /// <summary>
         /// Convert <c>new Object()</c> to <c>{}</c>, <c>new Array()</c> to <c>[]</c>,
         /// <c>new Array(1,2,3,4,5)</c> to <c>[1,2,3,4,5]</c>, and <c>new Array("foo")</c> becomes <c>["foo"]</c>.
@@ -135,28 +137,34 @@ namespace CombresJSSourceMaps
                 throw new NullReferenceException("mapFileFullPath is null");
             }
 
-            //Source maps are created by minifying the files individually and combining the output
-            //before adding the sourcemap url to the end.
-            using (var outputWriter = new StringWriter(outputBuilder))
+            //there is file writing in this so lock for threading
+            lock (SourceMapLock)
             {
-                using (var mapWriter = new StreamWriter(mapFileFullPath, false, utf8))
+                //Source maps are created by minifying the files individually and combining the output
+                //before adding the sourcemap url to the end.
+                using (var outputWriter = new StringWriter(outputBuilder))
                 {
-                    using (var sourceMap = new V3SourceMap(mapWriter))
+                    //using (var mapWriter = new StreamWriter(sourceMapStream, utf8))
+                    using (var mapWriter = new StreamWriter(mapFileFullPath, false, utf8))
                     {
-                        //set the sourcemap as part of minification settings
-                        codeSettings.SymbolsMap = sourceMap;
-                        codeSettings.TermSemicolons = true;
+                        using (var sourceMap = new V3SourceMap(mapWriter))
+                        {
+                            //set the sourcemap as part of minification settings
+                            codeSettings.SymbolsMap = sourceMap;
+                            codeSettings.TermSemicolons = true;
 
-                        //initialize the sourcemap
-                        sourceMap.StartPackage(VirtualPathUtility.ToAbsolute(outputPath), VirtualPathUtility.ToAbsolute(mapFile));
+                            //initialize the sourcemap
+                            sourceMap.StartPackage(VirtualPathUtility.ToAbsolute(outputPath),
+                                VirtualPathUtility.ToAbsolute(mapFile));
 
-                        var minifier = new Minifier();
-                        outputWriter.Write(minifier.MinifyJavaScript(combinedContent, codeSettings));
+                            var minifier = new Minifier();
+                            outputWriter.Write(minifier.MinifyJavaScript(combinedContent, codeSettings));
 
-                        //sourcemap complete
-                        sourceMap.EndPackage();
-                        //write the sourcemap url to the end of the minified output
-                        sourceMap.EndFile(outputWriter, "\r\n");
+                            //sourcemap complete
+                            sourceMap.EndPackage();
+                            //write the sourcemap url to the end of the minified output
+                            sourceMap.EndFile(outputWriter, "\r\n");
+                        }
                     }
                 }
             }
