@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/danspam/CombresJSSourceMaps</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Initial Release.</releaseNotes>
+    <releaseNotes>Bug Fix</releaseNotes>
     <copyright>Copyright 2014</copyright>
     <dependencies>
       <dependency id="combres" version="2.2.2.18" />
